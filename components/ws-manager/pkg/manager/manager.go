@@ -597,7 +597,7 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		// outselves. Doing it ourselves lets us synchronize the status update with probing for actual availability, not just
 		// the service modification in Kubernetes.
 		wso := workspaceObjects{Pod: pod, PortsService: service}
-		if m.completeWorkspaceObjects(&wso) != nil {
+		if err := m.completeWorkspaceObjects(&wso); err != nil {
 			return xerrors.Errorf("cannot update status: %w", err)
 		}
 		status, err := m.getWorkspaceStatus(wso)
@@ -657,7 +657,7 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		tracing.LogEvent(span, "host available")
 
 		// we've successfully exposed the port by creating the service
-		if notifyStatusChange() != nil {
+		if err := notifyStatusChange(); err != nil {
 			return nil, err
 		}
 		return &api.ControlPortResponse{}, nil
@@ -754,7 +754,7 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		return nil, xerrors.Errorf("cannot control port: %w", err)
 	}
 
-	if notifyStatusChange() != nil {
+	if err := notifyStatusChange(); err != nil {
 		return nil, err
 	}
 	return &api.ControlPortResponse{}, nil
