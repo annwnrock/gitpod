@@ -453,7 +453,8 @@ func (s *Scheduler) gatherPotentialNodesFor(ctx context.Context, pod *corev1.Pod
 }
 
 func (s *Scheduler) bindPodToNode(ctx context.Context, pod *corev1.Pod, nodeName string) (err error) {
-	span, _ := tracing.FromContext(ctx, "bindPodToNode")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "bindPodToNode")
 	defer tracing.FinishSpan(span, nil) // let caller decide whether this is an actual error or not
 	span.LogKV("nodeName", nodeName, "podName", pod.Name)
 
@@ -531,7 +532,8 @@ func (s *Scheduler) waitForCacheSync(ctx context.Context) bool {
 }
 
 func (s *Scheduler) recordSchedulingFailure(ctx context.Context, pod *corev1.Pod, failureErr error, reason string, message string) (err error) {
-	span, _ := tracing.FromContext(ctx, "recordSchedulingFailure")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "recordSchedulingFailure")
 	defer tracing.FinishSpan(span, &err)
 
 	// It's important to not spam the pod with "PodScheduled: false" conditions, because this seems to result

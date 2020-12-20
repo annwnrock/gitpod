@@ -69,7 +69,8 @@ func (m *Manager) TakeSnapshot(ctx context.Context, req *api.TakeSnapshotRequest
 
 // ControlAdmission makes a workspace accessible for everyone or for the owner only
 func (m *Manager) ControlAdmission(ctx context.Context, req *api.ControlAdmissionRequest) (res *api.ControlAdmissionResponse, err error) {
-	span, _ := tracing.FromContext(ctx, "ControlAdmission")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "ControlAdmission")
 	tracing.ApplyOWI(span, log.OWI("", "", req.Id))
 	tracing.LogRequestSafe(span, req)
 	defer tracing.FinishSpan(span, &err)
@@ -115,7 +116,8 @@ func (m *Manager) ControlAdmission(ctx context.Context, req *api.ControlAdmissio
 
 // SetTimeout changes the default timeout for a running workspace
 func (m *Manager) SetTimeout(ctx context.Context, req *api.SetTimeoutRequest) (res *api.SetTimeoutResponse, err error) {
-	span, _ := tracing.FromContext(ctx, "SetTimeout")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "SetTimeout")
 	tracing.ApplyOWI(span, log.OWI("", "", req.Id))
 	defer tracing.FinishSpan(span, &err)
 

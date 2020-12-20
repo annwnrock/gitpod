@@ -494,7 +494,8 @@ func getTheiaServiceName(servicePrefix string) string {
 
 // MarkActive records a workspace as being active which prevents it from timing out
 func (m *Manager) MarkActive(ctx context.Context, req *api.MarkActiveRequest) (res *api.MarkActiveResponse, err error) {
-	span, _ := tracing.FromContext(ctx, "MarkActive")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "MarkActive")
 	tracing.ApplyOWI(span, log.OWI("", "", req.Id))
 	defer tracing.FinishSpan(span, &err)
 
@@ -597,7 +598,8 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		// outselves. Doing it ourselves lets us synchronize the status update with probing for actual availability, not just
 		// the service modification in Kubernetes.
 		wso := workspaceObjects{Pod: pod, PortsService: service}
-		if err := m.completeWorkspaceObjects(&wso); err != nil {
+		err := m.completeWorkspaceObjects(&wso)
+		if err != nil {
 			return xerrors.Errorf("cannot update status: %w", err)
 		}
 		status, err := m.getWorkspaceStatus(wso)
@@ -657,7 +659,8 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		tracing.LogEvent(span, "host available")
 
 		// we've successfully exposed the port by creating the service
-		if err := notifyStatusChange(); err != nil {
+		err = notifyStatusChange()
+		if err != nil {
 			return nil, err
 		}
 		return &api.ControlPortResponse{}, nil
@@ -754,7 +757,8 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 		return nil, xerrors.Errorf("cannot control port: %w", err)
 	}
 
-	if err := notifyStatusChange(); err != nil {
+	err = notifyStatusChange()
+	if err != nil {
 		return nil, err
 	}
 	return &api.ControlPortResponse{}, nil
@@ -786,7 +790,8 @@ func portNameToVisibility(s string) api.PortVisibility {
 
 // DescribeWorkspace investigates a workspace and returns its status, and configuration
 func (m *Manager) DescribeWorkspace(ctx context.Context, req *api.DescribeWorkspaceRequest) (res *api.DescribeWorkspaceResponse, err error) {
-	span, _ := tracing.FromContext(ctx, "DescribeWorkspace")
+	//nolint:ineffassign
+	span, conctx := tracing.FromContext(ctx, "DescribeWorkspace")
 	tracing.ApplyOWI(span, log.OWI("", "", req.Id))
 	defer tracing.FinishSpan(span, &err)
 
@@ -1007,7 +1012,8 @@ func (m *Manager) GetWorkspaces(ctx context.Context, req *api.GetWorkspacesReque
 // If a workspace has a pod that pod is part of the returned WSO.
 // If a workspace has a PLIS that PLIS is part of the returned WSO.
 func (m *Manager) getAllWorkspaceObjects(ctx context.Context) (result []workspaceObjects, err error) {
-	span, _ := tracing.FromContext(ctx, "getAllWorkspaceObjects")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "getAllWorkspaceObjects")
 	defer tracing.FinishSpan(span, &err)
 
 	// Note: if we ever face performance issues with our constant querying of Kubernetes, we could use the reflector
@@ -1117,7 +1123,8 @@ func isKubernetesObjNotFoundError(err error) bool {
 
 // connectToWorkspaceDaemon establishes a connection to the ws-daemon daemon running on the node of the pod/workspace.
 func (m *Manager) connectToWorkspaceDaemon(ctx context.Context, wso workspaceObjects) (wsdaemon.WorkspaceContentServiceClient, error) {
-	span, _ := tracing.FromContext(ctx, "connectToWorkspaceDaemon")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "connectToWorkspaceDaemon")
 	tracing.ApplyOWI(span, wso.GetOWI())
 	defer tracing.FinishSpan(span, nil)
 
@@ -1225,7 +1232,8 @@ func newWssyncConnectionFactory(managerConfig Configuration) (grpcpool.Factory, 
 }
 
 func (m *Manager) deleteGhostWorkspace(ctx context.Context) (err error) {
-	span, _ := tracing.FromContext(ctx, "deleteGhostWorkspace")
+	//nolint:ineffassign
+	span, ctx := tracing.FromContext(ctx, "deleteGhostWorkspace")
 	defer tracing.FinishSpan(span, &err)
 
 	gps, err := m.Clientset.CoreV1().Pods(m.Config.Namespace).List(metav1.ListOptions{
