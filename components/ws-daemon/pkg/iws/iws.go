@@ -204,15 +204,15 @@ func (wbs *InWorkspaceServiceServer) PrepareForUserNS(ctx context.Context, req *
 
 	// We cannot use the nsenter syscall here because mount namespaces affect the whole process, not just the current thread.
 	// That's why we resort to exec'ing "nsenter ... mount ...".
-	_, err = exec.Command("nsenter", "-t", fmt.Sprint(containerPID), "-m", "--", "mount", "--make-shared", "/").CombinedOutput()
+	mntout, err := exec.Command("nsenter", "-t", fmt.Sprint(containerPID), "-m", "--", "mount", "--make-shared", "/").CombinedOutput()
 	if err != nil {
-		log.WithField("containerPID", containerPID).WithError(err).Error("cannot make container's rootfs shared")
+		log.WithField("containerPID", containerPID).WithField("mntout", string(mntout)).WithError(err).Error("cannot make container's rootfs shared")
 		return nil, status.Errorf(codes.Internal, "cannot make container's rootfs shared")
 	}
 
 	_ = os.MkdirAll(filepath.Join(wbs.Session.ServiceLocDaemon, "mark"), 0755)
 	mountpoint := filepath.Join(wbs.Session.ServiceLocNode, "mark")
-	mntout, err := exec.Command("nsenter", "-t", "1", "-m", "--", "mount", "-t", "shiftfs", "-o", "mark", rootfs, mountpoint).CombinedOutput()
+	mntout, err = exec.Command("nsenter", "-t", "1", "-m", "--", "mount", "-t", "shiftfs", "-o", "mark", rootfs, mountpoint).CombinedOutput()
 	if err != nil {
 		log.WithField("rootfs", rootfs).WithField("mountpoint", mountpoint).WithField("mntout", string(mntout)).WithError(err).Error("cannot mount shiftfs mark")
 		return nil, status.Errorf(codes.Internal, "cannot mount shiftfs mark")

@@ -749,8 +749,10 @@ func (m *Manager) ControlPort(ctx context.Context, req *api.ControlPortRequest) 
 			service.Annotations[fmt.Sprintf("gitpod/port-url-%d", p.Port)] = url
 		}
 
-		//nolint:ineffassign
 		_, err = client.Services(m.Config.Namespace).Update(service)
+		if err != nil {
+			return nil, xerrors.Errorf("cannot update service: %w", err)
+		}
 		tracing.LogEvent(span, "port service updated")
 	}
 	if err != nil {
@@ -791,7 +793,7 @@ func portNameToVisibility(s string) api.PortVisibility {
 // DescribeWorkspace investigates a workspace and returns its status, and configuration
 func (m *Manager) DescribeWorkspace(ctx context.Context, req *api.DescribeWorkspaceRequest) (res *api.DescribeWorkspaceResponse, err error) {
 	//nolint:ineffassign
-	span, conctx := tracing.FromContext(ctx, "DescribeWorkspace")
+	span, ctx := tracing.FromContext(ctx, "DescribeWorkspace")
 	tracing.ApplyOWI(span, log.OWI("", "", req.Id))
 	defer tracing.FinishSpan(span, &err)
 
