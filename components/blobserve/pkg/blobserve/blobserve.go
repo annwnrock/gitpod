@@ -160,6 +160,7 @@ func (reg *Server) serve(w http.ResponseWriter, req *http.Request) {
 	var fs http.FileSystem
 	fs = blob
 	if workdir != "" {
+		log.Debugf("using prefixingFilesystem for: '%s'", workdir)
 		fs = prefixingFilesystem{Prefix: workdir, FS: fs}
 	}
 	http.StripPrefix(pathPrefix, http.FileServer(fs)).ServeHTTP(w, req)
@@ -187,5 +188,18 @@ type prefixingFilesystem struct {
 }
 
 func (p prefixingFilesystem) Open(name string) (http.File, error) {
-	return p.FS.Open(filepath.Join(p.Prefix, name))
+	path := filepath.Join(p.Prefix, name)
+	log.Debugf("opening path: '%s'", path)
+	file, err := p.FS.Open(path)
+	if err != nil {
+		log.Error("error opening file: %w", err)
+	} else {
+		info, _ := file.Stat()
+		if err != nil {
+			log.WithError(err).Errorf("error stating file")
+		} else {
+			log.Infof("done opening file: '%s', size: %d", path, info.Size())
+		}
+	}
+	return file, err
 }
